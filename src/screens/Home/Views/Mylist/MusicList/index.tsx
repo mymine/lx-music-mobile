@@ -13,6 +13,7 @@ import MultipleModeBar, { type SelectMode, type MultipleModeBarType } from './Mu
 import ListSearchBar, { type ListSearchBarType } from './ListSearchBar'
 import ListMusicSearch, { type ListMusicSearchType } from './ListMusicSearch'
 import MusicPositionModal, { type MusicPositionModalType } from './MusicPositionModal'
+import {downloadMusic} from "@/core/music/utils";
 
 
 export default () => {
@@ -144,6 +145,9 @@ export default () => {
         onAdd={handleAddMusic}
         onMove={handleMoveMusic}
         onChangePosition={info => musicPositionModalRef.current?.show(info)}
+        onDownload={(info)=>{
+          downloadMusic(info.musicInfo as LX.Music.MusicInfoOnline)
+        }}
       />
     </View>
   )

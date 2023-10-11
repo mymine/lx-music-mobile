@@ -6,10 +6,41 @@ import {
   getPlayerLyric as getStoreLyric,
 } from '@/utils/data'
 import { langS2T, toNewMusicInfo, toOldMusicInfo } from '@/utils'
-import { assertApiSupport } from '@/utils/tools'
+import {assertApiSupport, toast} from '@/utils/tools'
 import settingState from '@/store/setting/state'
 import { requestMsg } from '@/utils/message'
 import BackgroundTimer from 'react-native-background-timer'
+import RNFetchBlob from 'rn-fetch-blob';
+
+function getFileExtension(url:string) {
+  // 使用正则表达式匹配URL中的文件扩展名
+  const match = url.match(/\.([0-9a-z]+)(?=[?#]|$)/i);
+
+  // 如果匹配到扩展名，则返回该扩展名，否则返回默认值'mp3'
+  return match ? match[1] : 'mp3';
+}
+
+const downloadFile = async (url: string, fileName: string) => {
+  const dirs = RNFetchBlob.fs.dirs;
+  const extension = getFileExtension(url);
+  const path = `${dirs.DownloadDir}/${fileName}.${extension}`;
+
+  try {
+    await RNFetchBlob.config({
+      fileCache: true,
+      addAndroidDownloads: {
+        useDownloadManager: true,
+        notification: true,
+        path: path,
+        description: 'Downloading file.',
+      },
+    })
+      .fetch('GET', url)
+    console.log('File downloaded successfully.')
+  } catch (error) {
+    console.error(error)
+  }
+};
 
 
 const getOtherSourcePromises = new Map()
@@ -248,7 +279,21 @@ export const handleGetOnlineMusicUrl = async({ musicInfo, quality, onToggleSourc
   })
 }
 
-
+export const downloadMusic = (musicInfo: LX.Music.MusicInfoOnline)=>{
+  toast('开始下载...')
+  handleGetOnlineMusicUrl({
+    musicInfo: musicInfo,
+    isRefresh:false,
+    allowToggleSource: true,
+    onToggleSource:()=>{}
+  }).then(res=>{
+    return downloadFile(res.url, `${res.musicInfo.singer}-${res.musicInfo.name}`)
+  }).then(()=>{
+    toast('下载成功')
+  }).catch(()=>{
+    toast('获取下载地址失败')
+  })
+}
 export const getOnlineOtherSourcePicUrl = async({ musicInfos, onToggleSource, isRefresh, retryedSource = [] }: {
   musicInfos: LX.Music.MusicInfoOnline[]
   onToggleSource: (musicInfo?: LX.Music.MusicInfoOnline) => void
