@@ -23,3 +23,15 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     }
 }
+
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            android {
+                buildFeatures {
+                    buildConfig = true
+                }
+            }
+        }
+    }
+}

@@ -66,3 +66,7 @@ buck-out/
 
 # testing
 /coverage
+
+/android/keystore.properties
+/android/app/app-release.aab
+/android/app/keys.jks

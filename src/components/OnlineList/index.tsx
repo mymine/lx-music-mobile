@@ -7,7 +7,39 @@ import ListMusicMultiAdd, { type MusicMultiAddModalType as ListAddMultiType } fr
 import ListMusicAdd, { type MusicAddModalType as ListMusicAddType } from '@/components/MusicAddModal'
 import MultipleModeBar, { type MultipleModeBarType, type SelectMode } from './MultipleModeBar'
 import { handleDislikeMusic, handlePlay, handlePlayLater, handleShare } from './listAction'
-import { createStyle } from '@/utils/tools'
+import { createStyle, toast } from '@/utils/tools'
+import {handleGetOnlineMusicUrl} from "@/core/music/utils";
+import RNFetchBlob from 'rn-fetch-blob';
+
+const downloadFile = async (url: string, fileName: string) => {
+  const dirs = RNFetchBlob.fs.dirs;
+  const extension = getFileExtension(url);
+  const path = `${dirs.DownloadDir}/${fileName}.${extension}`;
+
+  try {
+    await RNFetchBlob.config({
+      fileCache: true,
+      addAndroidDownloads: {
+        useDownloadManager: true,
+        notification: true,
+        path: path,
+        description: 'Downloading file.',
+      },
+    })
+      .fetch('GET', url)
+    console.log('File downloaded successfully.')
+  } catch (error) {
+    console.error(error)
+  }
+};
+
+function getFileExtension(url:string) {
+  // 使用正则表达式匹配URL中的文件扩展名
+  const match = url.match(/\.([0-9a-z]+)(?=[?#]|$)/i);
+
+  // 如果匹配到扩展名，则返回该扩展名，否则返回默认值'mp3'
+  return match ? match[1] : 'mp3';
+}
 
 export interface OnlineListProps {
   onRefresh: ListProps['onRefresh']
@@ -109,6 +141,21 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
         onPlayLater={info => { hancelExitSelect(); handlePlayLater(info.musicInfo, info.selectedList, hancelExitSelect) }}
         onCopyName={info => { handleShare(info.musicInfo) }}
         onAdd={handleAddMusic}
+        onDownload={(info)=>{
+          toast('开始下载...')
+          handleGetOnlineMusicUrl({
+            musicInfo: info.musicInfo,
+            isRefresh:false,
+            allowToggleSource: true,
+            onToggleSource:()=>{}
+          }).then(res=>{
+            return downloadFile(res.url, `${res.musicInfo.singer}-${res.musicInfo.name}`)
+          }).then(()=>{
+            toast('下载成功')
+          }).catch(()=>{
+            toast('获取下载地址失败')
+          })
+        }}
         onDislikeMusic={info => { void handleDislikeMusic(info.musicInfo) }}
       />
       {/* <LoadingMask ref={loadingMaskRef} /> */}
