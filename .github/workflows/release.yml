@@ -50,6 +50,12 @@ jobs:
           cd android
           ./gradlew assembleRelease -PMYAPP_UPLOAD_STORE_FILE='debug.keystore' -PMYAPP_UPLOAD_KEY_ALIAS='debug' -PMYAPP_UPLOAD_STORE_PASSWORD='123456' -PMYAPP_UPLOAD_KEY_PASSWORD='123456'
 
+      - name: Upload Artifact all
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-all
+          path: android/app/build/
+
       - name: Upload Artifact arm64-v8a
         uses: actions/upload-artifact@v3
         with:
